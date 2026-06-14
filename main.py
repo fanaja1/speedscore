@@ -5,5 +5,6 @@ def handle_note(midi_note):
     note = midi_to_speedscore(midi_note)
     ui.add_note(note)
 
-ui = SpeedScoreUI(handle_note)
-ui.start_ui()
+if __name__ == "__main__":
+    ui = SpeedScoreUI(handle_note)
+    ui.start_ui()
