@@ -1,6 +1,7 @@
 import customtkinter as ctk
 import mido
 import threading
+from core.note_converter import transpose_speedscore
 
 # Configuration du thème sombre haut de gamme
 ctk.set_appearance_mode("dark")
@@ -119,7 +120,58 @@ class SpeedScoreUI:
         )
         self.reset_btn.pack(pady=5, padx=15, fill="x")
 
-        # Layout pour Zoom / Dézoom (côte à côte)
+        # Boutons Transposer rapide
+        self.transpose_frame = ctk.CTkFrame(self.text_tools_box, fg_color="transparent")
+        self.transpose_frame.pack(pady=5, padx=15, fill="x")
+
+        self.transpose_down_btn = ctk.CTkButton(
+            self.transpose_frame,
+            text="♭ -1",
+            width=108,
+            height=32,
+            fg_color="#3a3a4a",
+            hover_color="#4a4a5a",
+            command=lambda: self.transpose_text(-1)
+        )
+        self.transpose_down_btn.pack(side="left", expand=True, padx=(0, 5))
+
+        self.transpose_up_btn = ctk.CTkButton(
+            self.transpose_frame,
+            text="♯ +1",
+            width=108,
+            height=32,
+            fg_color="#3a3a4a",
+            hover_color="#4a4a5a",
+            command=lambda: self.transpose_text(1)
+        )
+        self.transpose_up_btn.pack(side="right", expand=True, padx=(5, 0))
+
+        self.insert_frame = ctk.CTkFrame(self.text_tools_box, fg_color="transparent")
+        self.insert_frame.pack(pady=5, padx=15, fill="x")
+
+        self.newline_btn = ctk.CTkButton(
+            self.insert_frame,
+            text="↵ À la ligne",
+            width=108,
+            height=32,
+            fg_color="#3a3a4a",
+            hover_color="#4a4a5a",
+            command=self.insert_newline
+        )
+        self.newline_btn.pack(side="left", expand=True, padx=(0, 5))
+
+        self.dash_btn = ctk.CTkButton(
+            self.insert_frame,
+            text="— Tiret",
+            width=108,
+            height=32,
+            fg_color="#3a3a4a",
+            hover_color="#4a4a5a",
+            command=self.insert_dash
+        )
+        self.dash_btn.pack(side="right", expand=True, padx=(5, 0))
+
+        # Layout pour Zoom / Dézoome (côte à côte)
         self.zoom_frame = ctk.CTkFrame(self.text_tools_box, fg_color="transparent")
         self.zoom_frame.pack(pady=(5, 12), padx=15, fill="x")
 
@@ -238,6 +290,27 @@ class SpeedScoreUI:
                 self.text.delete(f"1.0 + {last_space + 1} chars", "end")
             else:
                 self.text.delete("1.0", "end")
+
+    # ===== TRANSPOSER LE TEXTE =====
+    def transpose_text(self, shift: int):
+        current = self.text.get("1.0", "end-1c").strip()
+        if not current:
+            return
+
+        transposed = transpose_speedscore(current, shift)
+        self.text.delete("1.0", "end")
+        self.text.insert("end", transposed + " ")
+        self.update_status(f"Transposé de {shift} semitone(s)", "#2ec4b6")
+
+    def insert_newline(self):
+        self.text.insert("end", "\n")
+        self.text.see("end")
+        self.update_status("Insertion d'une nouvelle ligne", "#2ec4b6")
+
+    def insert_dash(self):
+        self.text.insert("end", "— ")
+        self.text.see("end")
+        self.update_status("Tiret inséré", "#2ec4b6")
 
     # ===== ZOOM / DEZOOM =====
     def zoom_in(self):
